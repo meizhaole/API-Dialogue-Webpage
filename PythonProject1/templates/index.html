@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>讯飞星火对话助手</title>
+    <style>
+        /* 页面样式设置，让界面更美观 */
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .chat-history {
+            height: 500px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .user-message {
+            text-align: right;
+            margin: 10px 0;
+        }
+        .bot-message {
+            text-align: left;
+            margin: 10px 0;
+        }
+        .message {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 70%;
+            line-height: 1.5;
+        }
+        .user {
+            background-color: #1E88E5;
+            color: white;
+        }
+        .bot {
+            background-color: #e9e9eb;
+            color: #333;
+        }
+        #chatForm {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 4;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+        }
+        input:focus {
+            border-color: #1E88E5;
+        }
+        button {
+            flex: 1;
+            padding: 12px 0;
+            background-color: #1E88E5;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 聊天记录显示区域 -->
+        <div class="chat-history" id="chatHistory"></div>
+
+        <!-- 输入框和发送按钮 -->
+        <form id="chatForm">
+            <input type="text" id="userInput" placeholder="请输入消息..." autocomplete="off">
+            <button type="submit">发送</button>
+        </form>
+    </div>
+
+    <script>
+        // 监听表单提交事件（用户点击发送按钮或按回车）
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止页面刷新
+            const userInput = document.getElementById('userInput').value.trim();
+
+            if (!userInput) return; // 如果输入为空，不执行任何操作
+
+            // 显示用户发送的消息
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML += `
+                <div class="user-message">
+                    <span class="message user">${userInput}</span>
+                </div>
+            `;
+            document.getElementById('userInput').value = ''; // 清空输入框
+
+            // 调用后端接口，获取讯飞星火的回复
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userInput })
+                });
+                const data = await response.json();
+
+                // 显示模型的回复
+                chatHistory.innerHTML += `
+                    <div class="bot-message">
+                        <span class="message bot">${data.reply}</span>
+                    </div>
+                `;
+            } catch (error) {
+                // 如果出错，显示错误信息
+                chatHistory.innerHTML += `
+                    <div class="bot-message">
+                        <span class="message bot">获取回复失败，请重试</span>
+                    </div>
+                `;
+            }
+
+            // 自动滚动到最新消息
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        });
+    </script>
+</body>
+</html>
